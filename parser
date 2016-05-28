@@ -35,7 +35,7 @@ def getposts(subreddit):
     print 'all posts acquired'
     return posts
 def checkmodflair(modflairs,posts):
-    oldest = 999999999999999999 # a number big enough to be older than "now"
+    oldest = 999999999999999999 # a number big enough to be younger than "now"
     # find the oldest moderator-applied flair edit
     for item in modflairs:
         if item.time < oldest:
