@@ -1,0 +1,65 @@
+import praw
+def getmodflairs(subreddit):
+    modloggen = subreddit.get_mod_log(action='editflair', # ensures that only flair edits are retrieved
+                                      limit=1000)
+    class modded:
+        def __init__(self,id,mod,time):
+            self.id = id
+            self.mod = mod
+            self.time = time
+    modflaired = []
+    alreadyadded = []
+    for moditem in modloggen:
+        # moditem.target_fullname is the reddit unique id for the post
+        # moditem.mod is the moderator who applied the change
+        if moditem.target_fullname not in alreadyadded: # ensures that we only consider one moderator-applied flair change per post
+            alreadyadded.append(moditem.target_fullname)
+            modflaired.append(modded(moditem.target_fullname,
+                                     moditem.mod,
+                                     moditem.created_utc)
+                              )
+    print 'all modflair applications acquired'
+    return modflaired
+def getposts(subreddit):
+    posts = []
+    newpostgen = daystrom.get_new(limit=1000)
+    class userpost:
+        def __init__(self,id,time):
+            self.id = id
+            self.time = time
+    for post in newpostgen:
+        # post.fullname is the reddit unique id for the post
+        posts.append(userpost(post.fullname,
+                              post.created_utc)
+                     )
+    print 'all posts acquired'
+    return posts
+def checkmodflair(modflairs,posts):
+    oldest = 999999999999999999 # a number big enough to be older than "now"
+    # find the oldest moderator-applied flair edit
+    for item in modflairs:
+        if item.time < oldest:
+            oldest = item.time 
+    modded = 0
+    numposts = 0
+    for post in posts:
+        # ensure that we don't consider any posts older than the oldest moderator flair edit
+        if post.time >= oldest: 
+            numposts += 1
+            for item in modflairs:
+                if post.id == item.id:
+                    modded += 1
+    print oldest
+    print len(modflairs),len(posts)
+    print modded,numposts
+    return modflairs,posts
+username = 'USERNAME'
+password = 'PASSWORD'
+r = praw.Reddit(user_agent=username+"'s Daystrom Post Parser")
+r.login(username,password,
+        disable_warning=True)
+daystrom = r.get_subreddit('DaystromInstitute')
+a,b = checkmodflair(getmodflairs(daystrom),
+                    getposts(daystrom)
+                    )
+print 'done'
